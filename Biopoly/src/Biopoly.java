@@ -35,7 +35,7 @@ public class Biopoly extends PApplet {
     GButton loc34;
     GButton loc37;
     GButton loc39;
-    
+
     static Random r = new Random();
 
     static String[] program = {"Biopoly"};
@@ -44,7 +44,7 @@ public class Biopoly extends PApplet {
         G4P.messagesEnabled(false);
         G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME);
         G4P.setCursor(ARROW);
-  //      surface.setTitle("Sketch Window");
+        //      surface.setTitle("Sketch Window");
         board = new GImageButton(this, 0, 0, 800, 800, new String[]{"board.jpg", "board.jpg", "board.jpg"});
         board.addEventHandler(this, "imgButton1_click1");
         loc1 = new GButton(this, 616, 676, 60, 30);
@@ -115,6 +115,9 @@ public class Biopoly extends PApplet {
 
     public void setup() {
         size(800, 800, JAVA2D);
+        
+        
+        
         /**
          * Number of players playing the game.
          */
@@ -164,12 +167,16 @@ public class Biopoly extends PApplet {
          * file that stores multiple choice questions and answers.
          */
         File multiple = new File("multiplechoice.txt");
-        
+
         /**
          * List of squares (40 on the board).
          */
         int l[] = new int[40];
 
+        
+        //remove later
+        droptest();
+        
         /**
          * User inputs the amount of rounds they wish the game will last,
          * minimum of 3.
@@ -199,17 +206,17 @@ public class Biopoly extends PApplet {
         String names[] = new String[players];
 
         /**
-         * Stores the location, round each player is at, and their amount of money.
+         * Stores the location, round each player is at, and their amount of
+         * money.
          */
         int data[][] = new int[players][3];
-        
+
         /**
          * How many hops the player takes.
          */
         int dout;
-        
-        
 
+        
         /**
          * User Inputs their name.
          */
@@ -247,22 +254,36 @@ public class Biopoly extends PApplet {
     public static boolean checkWin(int t, int m) {
         return t > m;
     }
-    
+
     //remove later
-    public void mouseClicked(){
-		println(mouseX + ", " + mouseY);
-	}
+    public void mouseClicked() {
+        println(mouseX + ", " + mouseY);
+    }
+
     /**
      * Generates a random number, as if a die was rolled.
-     * 
+     *
      * @return a random number between 1 and 6
      */
-    public static int dout(){
-        int out = r.nextInt(6)+1;
+    public static int dout() {
+        int out = r.nextInt(6) + 1;
         return out;
     }
 
-    
+    public static void droptest() {
+        ImageIcon thisicon;
+        thisicon =  new ImageIcon("board.jpg");
+        String[] choices = {"A", "B", "C", "D", "E", "F"};
+        String input; // Initial choice
+        input = (String) JOptionPane.showInputDialog(null, "Choose now...",
+                "Multiple choice", JOptionPane.QUESTION_MESSAGE, thisicon, // Use
+                // default
+                // icon
+                choices, // Array of choices
+                choices[0]);
+        System.out.println(input);
+    }
+
     //replace with GImage later
     public void imgButton1_click1(GImageButton source, GEvent event) { //_CODE_:board:859749:
         //println("imgButton1 - GImageButton >> GEvent." + event + " @ " + millis());
