@@ -1,0 +1,13 @@
+Rules:
+1. Player must answer a random question before rolling die.
+2. Landing in Jain will result in the player skipping a turn.
+3. Knowledge Audit and Competence Contemplation result in the player having
+to answer 2 questions, reward = knowldege.
+4. Players can put a greenhouse on the property they are on
+(if it is unoccupied) for the amount listed on the square by clicking
+the colored rectangle.
+5. Looking at external sources of information while answering questions is
+prohibited.
+6. Any player that lands on someones property must half of the properties cost
+7. Bankrupt player will return to round 1
+8. Game over when a player finishes all rounds set earlier in the game
