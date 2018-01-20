@@ -2,7 +2,9 @@
 import processing.core.*;
 import g4p_controls.*;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 import javax.swing.*;
 
 /**
@@ -35,7 +37,10 @@ public class Biopoly extends PApplet {
     GButton loc34;
     GButton loc37;
     GButton loc39;
-
+    
+    /**
+     * Random used for asking questions.
+     */
     static Random r = new Random();
 
     static String[] program = {"Biopoly"};
@@ -113,11 +118,24 @@ public class Biopoly extends PApplet {
         loc39.addEventHandler(this, "loc39_click1");
     }
 
+    /**
+     * Stores knowledge questions.
+     */
+    static String knowq[] = new String[80];
+
+    /**
+     * Stores knowledge question answers.
+     */
+    static String knowans[] = new String[80];
+
+    /**
+     * stores multiple choice question, options, correct answer, imagename.
+     */
+    static String mpchoice[][] = new String[20][7];
+
     public void setup() {
         size(800, 800, JAVA2D);
-        
-        
-        
+        makeQuestions();
         /**
          * Number of players playing the game.
          */
@@ -134,49 +152,17 @@ public class Biopoly extends PApplet {
         int positions[][] = new int[40][2];
 
         /**
-         * Stores knowledge questions.
-         */
-        String knowq[] = new String[80];
-
-        /**
-         * Stores knowledge question answers.
-         */
-        String ansq[] = new String[80];
-
-        /**
-         * stores multiple choice questions.
-         */
-        String mcq[] = new String[20];
-
-        /**
-         * stores multiple choice question answers.
-         */
-        String ansmcq[] = new String[20];
-
-        /**
          * file that stores the positions of tiles.
          */
-        File pos = new File("positions.csv");
+        File pos = new File("locations.csv");
 
-        /**
-         * file that stores knowledge questions and answers.
-         */
-        File know = new File("knowledge.txt");
+        //testing funcionality of different methods.
+        showInstructions();
+        mpQuestion("Alex");
+        mpQuestion("Alex");
+        kQuestion("Alex");
+        kQuestion("Alex");
 
-        /**
-         * file that stores multiple choice questions and answers.
-         */
-        File multiple = new File("multiplechoice.txt");
-
-        /**
-         * List of squares (40 on the board).
-         */
-        int l[] = new int[40];
-
-        
-        //remove later
-        droptest();
-        
         /**
          * User inputs the amount of rounds they wish the game will last,
          * minimum of 3.
@@ -216,7 +202,6 @@ public class Biopoly extends PApplet {
          */
         int dout;
 
-        
         /**
          * User Inputs their name.
          */
@@ -255,9 +240,43 @@ public class Biopoly extends PApplet {
         return t > m;
     }
 
-    //remove later
-    public void mouseClicked() {
-        println(mouseX + ", " + mouseY);
+    /**
+     * Generates questions from file.
+     */
+    public static void makeQuestions() {
+        File know = new File("know.txt");
+        File multiple = new File("mpchoice.txt");
+
+        try {
+            Scanner k = new Scanner(know);
+            for (int i = 0; i < 80; i++) {
+                knowq[i] = k.nextLine();
+                knowans[i] = k.nextLine();
+            }
+            k.close();
+        } catch (Exception e) {
+        }
+
+        try {
+            Scanner m = new Scanner(multiple);
+
+            /**
+             * Inputs multple choice questions.
+             */
+            for (int i = 0; i < 20; i++) {
+                mpchoice[i][0] = m.nextLine(); //question
+                mpchoice[i][1] = m.nextLine(); //option A
+                mpchoice[i][2] = m.nextLine(); //option B
+                mpchoice[i][3] = m.nextLine(); //option C
+                mpchoice[i][4] = m.nextLine(); //option D
+                mpchoice[i][5] = m.nextLine(); //correct option
+                mpchoice[i][6] = m.nextLine(); //image file, null if missing
+            }
+
+            m.close();
+
+        } catch (Exception e) {
+        }
     }
 
     /**
@@ -269,19 +288,85 @@ public class Biopoly extends PApplet {
         int out = r.nextInt(6) + 1;
         return out;
     }
+    
+    
+    /**
+     * Asks user question from mpchoice.txt file, compares answer.
+     * 
+     * @param player player's name.
+     * @return true if answer correct.
+     */
+    public static boolean mpQuestion(String player) {
+        int i = r.nextInt(20) + 0;
+        String input;
+        String[] choices = {mpchoice[i][1], mpchoice[i][2], mpchoice[i][3], mpchoice[i][4]};
+        if (mpchoice[i][6] != null) {
+            ImageIcon icon;
+            icon = new ImageIcon(mpchoice[i][6]);
+            input = (String) JOptionPane.showInputDialog(null, mpchoice[i][0],
+                    player + "'s Question", JOptionPane.QUESTION_MESSAGE, icon, choices, choices[0]);
+        } else {
+            input = (String) JOptionPane.showInputDialog(null, mpchoice[i][0],
+                    player + "'s Question", JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
+        }
 
-    public static void droptest() {
-        ImageIcon thisicon;
-        thisicon =  new ImageIcon("board.jpg");
-        String[] choices = {"A", "B", "C", "D", "E", "F"};
-        String input; // Initial choice
-        input = (String) JOptionPane.showInputDialog(null, "Choose now...",
-                "Multiple choice", JOptionPane.QUESTION_MESSAGE, thisicon, // Use
-                // default
-                // icon
-                choices, // Array of choices
-                choices[0]);
-        System.out.println(input);
+        if(input.startsWith(mpchoice[i][5])){
+            JOptionPane.showMessageDialog(null, "Correct!", "Correct!", PERSPECTIVE);
+            return true;
+        }else{
+            JOptionPane.showMessageDialog(null, "Correct answer is: " + mpchoice[i][5], "Incorrect!", PERSPECTIVE);
+            return false;
+        }
+    }
+    
+    /**
+     * Asks question from know.txt file, compares answer
+     * 
+     * @param player current player's name
+     * @return true if correct answer, otherwise false
+     */
+    public static boolean kQuestion(String player){
+        int i = r.nextInt(80)+0;
+        String input;
+        
+        input = JOptionPane.showInputDialog(null, knowq[i], player+"'s Question", PERSPECTIVE);
+        
+        if(input.toLowerCase().equals(knowans[i])){
+            JOptionPane.showMessageDialog(null, "Correct!", "Correct!", PERSPECTIVE);
+            return true;
+        }
+        else{
+            JOptionPane.showMessageDialog(null, "The correct answer is: " + knowans[i], "Incorrect!", PERSPECTIVE);
+            return false;
+        }
+        
+    }
+
+    /**
+     * Show the user the instructions.
+     */
+    public static void showInstructions() {
+
+        /**
+         * file that stores instructions and rules.
+         */
+        File instructions = new File("instructions.txt");
+
+        try {
+            Scanner inst = new Scanner(instructions);
+            String rules = new String();
+
+            for (int i = 0; i < 15; i++) {
+                rules += inst.nextLine() + "\n";
+            }
+
+            JOptionPane.showMessageDialog(null, rules, "Rules", PERSPECTIVE);
+            
+            inst.close();
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "file not found!");
+        }
     }
 
     //replace with GImage later
