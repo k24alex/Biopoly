@@ -9,7 +9,8 @@ import javax.swing.*;
 
 /*
 TODO:
--make gamepeices array (up to 6 players)
+-add GLabel to display player, round, and money
+-add a next turn GButton
 -make a peice moving method:
 public static void move(int location)
 -make a property buy method:
@@ -137,6 +138,11 @@ public class Biopoly extends PApplet {
     static String knowq[] = new String[80];
 
     /**
+     * Stores x and y locations of board location, comes from csv file.
+     */
+    static int positions[][] = new int[40][2];
+
+    /**
      * Stores knowledge question answers.
      */
     static String knowans[] = new String[80];
@@ -147,35 +153,51 @@ public class Biopoly extends PApplet {
     static String mpchoice[][] = new String[20][7];
 
     /**
-     * Stores owner of houses.
+     * Stores location name, type, money, name and owner
      */
-    static String house[] = new String[40];
+    static String house[][] = new String[40][5];
+
+    /**
+     * Number of players playing the game.
+     */
+    static int players;
+
+    /**
+     * Number of rounds the game will reach.
+     */
+    static int rounds;
+
+    /**
+     * Stores user's name, will be used to identify users later.
+     */
+    static String names[] = new String[players];
+
+    /**
+     * Stores the location, round each player is at, their amount of money, and
+     * if they are skipping a turn.
+     */
+    static int data[][] = new int[players][4];
 
     public void setup() {
         size(800, 800, JAVA2D);
         makeQuestions();
-        
-        /**
-         * Sets ownership of squares to nobodu
-         */
-        for (int i = 0; i < 40; i++) {
-            house[i] = "none";
+
+        File pr = new File("price.csv");
+        try {
+            Scanner s = new Scanner(pr);
+            s.useDelimiter(",|\n");
+            for (int i = 0; i < 40; i++) {
+                house[i][0] = s.next();
+                positions[i][0] = Integer.parseInt(s.next().trim());
+                positions[i][1] = Integer.parseInt(s.next().trim());
+                house[i][1] = s.next();
+                house[i][2] = s.next();
+                house[i][3] = s.next();
+                house[i][4] = s.next();
+            }
+
+        } catch (Exception e) {
         }
-        
-        /**
-         * Number of players playing the game.
-         */
-        int players;
-
-        /**
-         * Number of rounds the game will reach.
-         */
-        int rounds;
-
-        /**
-         * Stores x and y locations of board location, comes from csv file.
-         */
-        int positions[][] = new int[40][2];
 
         /**
          * file that stores the positions of tiles.
@@ -216,17 +238,6 @@ public class Biopoly extends PApplet {
         }
 
         /**
-         * Stores user's name, will be used to identify users later.
-         */
-        String names[] = new String[players];
-
-        /**
-         * Stores the location, round each player is at, and their amount of
-         * money.
-         */
-        int data[][] = new int[players][3];
-
-        /**
          * How many hops the player takes.
          */
         int dout;
@@ -237,16 +248,69 @@ public class Biopoly extends PApplet {
         for (int i = 0; i < players; i++) {
             names[i] = JOptionPane.showInputDialog("What is player " + (i + 1) + "'s name?");
         }
-        
+
         for (int i = 0; i <= players; i++) {
             data[i][0] = 0; //location
             data[i][1] = 1; //round
             data[i][2] = 200; //starting money
+            data[i][3] = 0; //1 if the player needs to skip turn
         }
 
         createGUI();
-//        customGUI();
 
+        int currentPlayer = 0;
+
+        /**
+         * This is the mail loop of the game that is responsible for the
+         * gameplay
+         */
+        while (true) {
+
+            if (data[currentPlayer][3] == 1) { //checks if the player is in jail
+                JOptionPane.showMessageDialog(null, names[currentPlayer] + "is skipping this turn", "Jail", PERSPECTIVE);
+                data[currentPlayer][3] = 0; //renoves jail
+                currentPlayer++; //progresses game to next player and loop restarts
+
+            } else {
+                //change player name GLabel to display player name
+                //change money label to display players wealth
+                //chagne round label to display player's current round
+
+                int mk = r.nextInt(2) + 0;
+                if (mk == 0) {
+                    if (kQuestion(names[currentPlayer])) {
+                        int dice = dout(); //rolling the dice if question correct
+                        movePlayerR(currentPlayer, dice);
+                    }
+                } else {
+                    if (mpQuestion(names[currentPlayer])) {
+                        int dice = dout();
+                        movePlayerR(currentPlayer, dice);
+                    }
+                }
+
+                if (checkWin(data[currentPlayer][1], rounds)) {
+                    JOptionPane.showMessageDialog(null, "You have won!!!", "GAME OVER", PERSPECTIVE);
+                    System.exit(0); //game is shutdown when a player wins
+                }
+
+                if (checkHouse(data[currentPlayer][0])) {
+                    data[currentPlayer][2] -= 20;
+                }
+                checkMoney(currentPlayer); //checks if person is bankrupt
+                jail(currentPlayer, data[currentPlayer][0]); //checks if the person landed in jail
+                checkQuestion(currentPlayer, data[currentPlayer][0]); //checks if the person landed on question
+                checkTax(currentPlayer, data[currentPlayer][0]); //checks if the person owes tax or gets free money
+
+                
+                /*
+                Here the program needs to stop and wait for the player to hit next turn for the loop to restart
+                */
+                currentPlayer++; //makes the next player the currentPlayer
+                currentPlayer = currentPlayer>players ? 0 : currentPlayer; //makes sure that current player does not exceed total number of players
+                
+            }
+        }
     }
 
     public void handleButtonEvents(GButton button, GEvent event) {
@@ -262,6 +326,52 @@ public class Biopoly extends PApplet {
     public static void main(String ags[]) {
 
         PApplet.main(program);
+    }
+
+    /**
+     * Checks if square is jail or gotojail, and sends people to jail if it is
+     * jail
+     *
+     * @param player currentPlayer
+     * @param location player's location
+     */
+    public static void jail(int player, int location) {
+        if ("jail".equals(house[location][1])) {
+            JOptionPane.showMessageDialog(null, "You are in jail\nYou will skip the next turn!", "Jail", PERSPECTIVE);
+            data[player][3] = 1;
+        } else if ("gotojail".equals(house[location][1])) {
+            JOptionPane.showMessageDialog(null, "You are going to jail\nYou will skip the next turn!", "Go to Jail", PERSPECTIVE);
+            data[player][3] = 1;
+            movePlayerA(player, 10); //moves current player to loc10 (jail)
+        }
+    }
+
+    /**
+     * Checks if a player is on a question or 2question square, and calls
+     * question methods.
+     *
+     * @param player currentPlayer
+     * @param location player's location
+     */
+    public static void checkQuestion(int player, int location) {
+        if ("question".equals(house[location][1])) {
+            int mk = r.nextInt(2) + 0;
+            if (mk == 0) {
+                if (mpQuestion(names[player])) {
+                    data[player][2] += Integer.parseInt(house[location][2]);
+                }
+            } else {
+                if (kQuestion(names[player])) {
+                    data[player][2] += Integer.parseInt(house[location][2]);
+                }
+            }
+        } else if ("2question".equals(house[location][1])) {
+            for (int i = 0; i < 2; i++) {
+                int mk = r.nextInt(2) + 0;
+                boolean b = mk == 1 ? mpQuestion(names[player]) : kQuestion(names[player]);
+
+            }
+        }
     }
 
     /**
@@ -296,7 +406,7 @@ public class Biopoly extends PApplet {
             Scanner m = new Scanner(multiple);
 
             /**
-             * Inputs multple choice questions.
+             * Inputs multiple choice questions.
              */
             for (int i = 0; i < 20; i++) {
                 mpchoice[i][0] = m.nextLine(); //question
@@ -321,7 +431,7 @@ public class Biopoly extends PApplet {
      */
     public static int dout() {
         int out = r.nextInt(6) + 1;
-        
+
         ImageIcon d[] = new ImageIcon[6];
         for (int i = 0; i < 6; i++) {
             d[i] = new ImageIcon("dies/d" + (i + 1) + ".jpg");
@@ -408,34 +518,107 @@ public class Biopoly extends PApplet {
             JOptionPane.showMessageDialog(null, "file not found!");
         }
     }
-    
+
     /**
      * Checks if there is a property on square
-     * 
+     *
      * @param square square number
      * @return true if there is property otherwise false
      */
-    public static boolean checkHouse(int square){
-        if(!"none".equals(house[square])){
-            String message = "This property belongs to " + house[square] + "\nPay $20!";
+    public static boolean checkHouse(int square) {
+        if (!"none".equals(house[square][4])) {
+            String message = "This property belongs to " + house[square][4] + "\nPay $20!";
             JOptionPane.showMessageDialog(null, message, "Land", PERSPECTIVE);
+            data[Integer.parseInt(house[square][4])][2] += 20; //gives owner 20
             return true;
-        } else{
+
+        } else {
             return false;
         }
     }
-    
+
+    /**
+     * checks if the square is a tax or free money square
+     * @param player
+     * @param location 
+     */
+    public static void checkTax(int player, int location) {
+        if ("tax".equals(house[location][1])) {
+            JOptionPane.showMessageDialog(null, "You will pay a tax of " + house[location][2], "Tax", PERSPECTIVE);
+            data[player][2] -= Integer.parseInt(house[location][2]);
+        }else if("money".equals(house[location][1])){
+            JOptionPane.showMessageDialog(null,"Hooray! You have found a bag money laying on the road", "Money", PERSPECTIVE);
+            data[player][2] += 50;
+        }
+    }
+
+    /**
+     * Checks if the player is bankrupt
+     *
+     * @param player currentPlayer
+     */
+    public static void checkMoney(int player) {
+        if (data[player][2] < 0) {
+            JOptionPane.showMessageDialog(null, "You are bankrupt!\n Everything has been reset", "Money", PERSPECTIVE);
+            data[player][1] = 1;
+            data[player][2] = 200;
+            movePlayerA(player, 0);
+        }
+    }
+
     /**
      * Allows the user to buy a property
-     * 
+     *
      * @param name name of purchaser
      * @param location location of square
-     * @param cost cost of property
      */
-    public static void buy(String name, int location, int cost){
-        //missing: place a house on board
-        
-        house[location] = name;
+    public static void buy(int name, int location) {
+        if (!"none".equals(house[location][4])) { //property already owned
+            JOptionPane.showMessageDialog(null, "This property isn't for sale", "Buy", PERSPECTIVE);
+        } else if (data[name][0] != location) { //not on location
+            JOptionPane.showMessageDialog(null, "You must be on the square to purchase it!", "Buy", PERSPECTIVE);
+        } else {
+            if ((data[name][2] - (data[name][2]) * 2) < Integer.parseInt(house[location][2])) { //data-data*2 because price stored in negatives
+                JOptionPane.showMessageDialog(null, "You do not have enough money!", "Buy", PERSPECTIVE);
+            } else {
+                //transaction happens here
+                JOptionPane.showMessageDialog(null, "You have purchased " + house[location][3], "Buy", PERSPECTIVE);
+                house[location][4] = Integer.toString(name); //ownership set
+                data[name][2] += Integer.parseInt(house[location][2]); //money is taken subtracted (added negative)
+
+                //draw an image at positions[location][0], positions[location][1]
+            }
+        }
+
+    }
+
+    /**
+     * moves player to absolute location
+     *
+     * @param player currentPlayer
+     * @param location target location
+     */
+    public static void movePlayerA(int player, int location) {
+        data[player][0] = location;
+
+        //move player's icon to positions[location][0], positions[location][1]
+    }
+
+    /**
+     * Moves player relative to current location
+     *
+     * @param player currentPlayer
+     * @param dice outcome of dice
+     */
+    public static void movePlayerR(int player, int dice) {
+        data[player][0] += dice;
+        if (data[player][0] > 39) { //if player completes a round
+            data[player][0] -= 40; //subract 40
+            data[player][1] += 1; //adds 1 to round
+            data[player][2] += 200; //gives player $200 for round completion
+        }
+
+        //move player's icon to positions[data[player][0]], positions[data[player][1]]
     }
 
     //replace with GImage later
