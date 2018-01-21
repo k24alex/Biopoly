@@ -8,7 +8,7 @@ to answer 2 questions, reward = knowldege.
 the colored rectangle.
 5. Looking at external sources of information while answering questions is
 prohibited.
-6. Any player that lands on someones property must half of the properties cost
+6. Any player that lands on someones property must pay $20
 7. Bankrupt player will return to round 1
 8. Game over when a player finishes all rounds set earlier in the game
 9. When there are more that one word in an answer, separate by space

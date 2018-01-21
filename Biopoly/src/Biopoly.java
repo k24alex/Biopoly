@@ -7,6 +7,19 @@ import java.util.Random;
 import java.util.Scanner;
 import javax.swing.*;
 
+/*
+TODO:
+-make gamepeices array (up to 6 players)
+-make a peice moving method:
+public static void move(int location)
+-make a property buy method:
+public static void buy(int location)
+
+-build program
+
+Optional: 
+-add a soundtrack
+ */
 /**
  *
  * @author k24alex
@@ -37,7 +50,7 @@ public class Biopoly extends PApplet {
     GButton loc34;
     GButton loc37;
     GButton loc39;
-    
+
     /**
      * Random used for asking questions.
      */
@@ -133,9 +146,22 @@ public class Biopoly extends PApplet {
      */
     static String mpchoice[][] = new String[20][7];
 
+    /**
+     * Stores owner of houses.
+     */
+    static String house[] = new String[40];
+
     public void setup() {
         size(800, 800, JAVA2D);
         makeQuestions();
+        
+        /**
+         * Sets ownership of squares to nobodu
+         */
+        for (int i = 0; i < 40; i++) {
+            house[i] = "none";
+        }
+        
         /**
          * Number of players playing the game.
          */
@@ -157,6 +183,9 @@ public class Biopoly extends PApplet {
         File pos = new File("locations.csv");
 
         //testing funcionality of different methods.
+        checkHouse(34);
+        dout();
+        dout();
         showInstructions();
         mpQuestion("Alex");
         mpQuestion("Alex");
@@ -178,8 +207,8 @@ public class Biopoly extends PApplet {
          * User inputs the amount of players in the game.
          */
         while (true) {
-            players = Integer.parseInt(JOptionPane.showInputDialog("How many players? (max 6)"));
-            if (players >= 1 && players <= 6) {
+            players = Integer.parseInt(JOptionPane.showInputDialog("How many players? (max 5)"));
+            if (players >= 1 && players <= 5) {
                 break;
             }
 
@@ -207,6 +236,12 @@ public class Biopoly extends PApplet {
          */
         for (int i = 0; i < players; i++) {
             names[i] = JOptionPane.showInputDialog("What is player " + (i + 1) + "'s name?");
+        }
+        
+        for (int i = 0; i <= players; i++) {
+            data[i][0] = 0; //location
+            data[i][1] = 1; //round
+            data[i][2] = 200; //starting money
         }
 
         createGUI();
@@ -286,13 +321,19 @@ public class Biopoly extends PApplet {
      */
     public static int dout() {
         int out = r.nextInt(6) + 1;
+        
+        ImageIcon d[] = new ImageIcon[6];
+        for (int i = 0; i < 6; i++) {
+            d[i] = new ImageIcon("dies/d" + (i + 1) + ".jpg");
+        }
+
+        JOptionPane.showMessageDialog(null, "You rolled " + out, "Dice", PERSPECTIVE, d[out - 1]);
         return out;
     }
-    
-    
+
     /**
      * Asks user question from mpchoice.txt file, compares answer.
-     * 
+     *
      * @param player player's name.
      * @return true if answer correct.
      */
@@ -302,7 +343,7 @@ public class Biopoly extends PApplet {
         String[] choices = {mpchoice[i][1], mpchoice[i][2], mpchoice[i][3], mpchoice[i][4]};
         if (mpchoice[i][6] != null) {
             ImageIcon icon;
-            icon = new ImageIcon(mpchoice[i][6]);
+            icon = new ImageIcon("images/" + mpchoice[i][6]);
             input = (String) JOptionPane.showInputDialog(null, mpchoice[i][0],
                     player + "'s Question", JOptionPane.QUESTION_MESSAGE, icon, choices, choices[0]);
         } else {
@@ -310,36 +351,35 @@ public class Biopoly extends PApplet {
                     player + "'s Question", JOptionPane.QUESTION_MESSAGE, null, choices, choices[0]);
         }
 
-        if(input.startsWith(mpchoice[i][5])){
+        if (input.startsWith(mpchoice[i][5])) {
             JOptionPane.showMessageDialog(null, "Correct!", "Correct!", PERSPECTIVE);
             return true;
-        }else{
+        } else {
             JOptionPane.showMessageDialog(null, "Correct answer is: " + mpchoice[i][5], "Incorrect!", PERSPECTIVE);
             return false;
         }
     }
-    
+
     /**
      * Asks question from know.txt file, compares answer
-     * 
+     *
      * @param player current player's name
      * @return true if correct answer, otherwise false
      */
-    public static boolean kQuestion(String player){
-        int i = r.nextInt(80)+0;
+    public static boolean kQuestion(String player) {
+        int i = r.nextInt(80) + 0;
         String input;
-        
-        input = JOptionPane.showInputDialog(null, knowq[i], player+"'s Question", PERSPECTIVE);
-        
-        if(input.toLowerCase().equals(knowans[i])){
+
+        input = JOptionPane.showInputDialog(null, knowq[i], player + "'s Question", PERSPECTIVE);
+
+        if (input.toLowerCase().equals(knowans[i])) {
             JOptionPane.showMessageDialog(null, "Correct!", "Correct!", PERSPECTIVE);
             return true;
-        }
-        else{
+        } else {
             JOptionPane.showMessageDialog(null, "The correct answer is: " + knowans[i], "Incorrect!", PERSPECTIVE);
             return false;
         }
-        
+
     }
 
     /**
@@ -361,12 +401,41 @@ public class Biopoly extends PApplet {
             }
 
             JOptionPane.showMessageDialog(null, rules, "Rules", PERSPECTIVE);
-            
+
             inst.close();
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "file not found!");
         }
+    }
+    
+    /**
+     * Checks if there is a property on square
+     * 
+     * @param square square number
+     * @return true if there is property otherwise false
+     */
+    public static boolean checkHouse(int square){
+        if(!"none".equals(house[square])){
+            String message = "This property belongs to " + house[square] + "\nPay $20!";
+            JOptionPane.showMessageDialog(null, message, "Land", PERSPECTIVE);
+            return true;
+        } else{
+            return false;
+        }
+    }
+    
+    /**
+     * Allows the user to buy a property
+     * 
+     * @param name name of purchaser
+     * @param location location of square
+     * @param cost cost of property
+     */
+    public static void buy(String name, int location, int cost){
+        //missing: place a house on board
+        
+        house[location] = name;
     }
 
     //replace with GImage later
