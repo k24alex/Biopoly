@@ -28,7 +28,7 @@ loc26,437,30,house,-260,Garden-Parkway,none
 loc27,500,31,house,-260,Algae-Quay,none
 loc28,561,32,2questions,150,2Questions,none
 loc29,622,27,house,-260,Pea-Road,none
-loc30,688,13,jail,0,gotojail,none
+loc30,688,13,gotojail,0,gotojail,none
 loc31,728,138,house,-300,Naturaly-Selected-Road,none
 loc32,724,197,house,-300,Advantageous-Avenue,none
 loc33,719,256,money,50,money,none

@@ -73,7 +73,7 @@ Dihybrid crosses compare the probability of ... traits
 What gender is more likely to inherit a sex-linked trait?
 male
 Principle of Independent Assortment is not applied to traits that are found on the same ...
-chromosome
+allele
 DNA is copied to ... when it leaves the nucleus
 rna
 The mitochondira has its own DNA called ... and can be traced to a single female ancestor
