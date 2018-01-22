@@ -3,6 +3,7 @@ import processing.core.*;
 import g4p_controls.*;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import javax.swing.*;
@@ -10,11 +11,9 @@ import javax.swing.*;
 /*
 TODO:
 -add GLabel to display player, round, and money
--add a next turn GButton
+-add a next turn and instructions GButton
 -make a peice moving method:
 public static void move(int location)
--make a property buy method:
-public static void buy(int location)
 
 -build program
 
@@ -28,7 +27,6 @@ Optional:
 public class Biopoly extends PApplet {
 
     // GUI declarations
-    GImageButton board;
     GButton loc1;
     GButton loc3;
     GButton loc6;
@@ -51,11 +49,20 @@ public class Biopoly extends PApplet {
     GButton loc34;
     GButton loc37;
     GButton loc39;
+    
+    
+    PImage houseImage, boardImage;
+    //all player images will be loaded but not all used
+    PImage p1, p2, p3, p4, p5;
+    GButton btnNextTurn, btnInstructions;
+    GLabel lblRound, lblMoney, lblName;
 
     /**
      * Random used for asking questions.
      */
     static Random r = new Random();
+    
+    int numhouses = 0;
 
     static String[] program = {"Biopoly"};
 
@@ -64,8 +71,6 @@ public class Biopoly extends PApplet {
         G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME);
         G4P.setCursor(ARROW);
         //      surface.setTitle("Sketch Window");
-        board = new GImageButton(this, 0, 0, 800, 800, new String[]{"board.jpg", "board.jpg", "board.jpg"});
-        board.addEventHandler(this, "imgButton1_click1");
         loc1 = new GButton(this, 616, 676, 60, 30);
         loc1.setLocalColorScheme(GCScheme.PURPLE_SCHEME);
         loc1.addEventHandler(this, "loc1_click1");
@@ -166,34 +171,43 @@ public class Biopoly extends PApplet {
      * Number of rounds the game will reach.
      */
     static int rounds;
+    
+    /**
+     * This is the number of the current player in the main loop.
+     */
+    static int currentPlayer = 0;
 
     /**
      * Stores user's name, will be used to identify users later.
      */
-    static String names[] = new String[players];
+    static String names[]; 
 
     /**
      * Stores the location, round each player is at, their amount of money, and
      * if they are skipping a turn.
      */
-    static int data[][] = new int[players][4];
+    static int data[][];
 
     public void setup() {
         size(800, 800, JAVA2D);
         makeQuestions();
+        
+        houseImage = loadImage("icons/house.png");
+        boardImage = loadImage("board2.jpg");
 
         File pr = new File("price.csv");
         try {
             Scanner s = new Scanner(pr);
             s.useDelimiter(",|\n");
             for (int i = 0; i < 40; i++) {
-                house[i][0] = s.next();
+                house[i][0] = s.next().trim();
                 positions[i][0] = Integer.parseInt(s.next().trim());
                 positions[i][1] = Integer.parseInt(s.next().trim());
-                house[i][1] = s.next();
-                house[i][2] = s.next();
-                house[i][3] = s.next();
-                house[i][4] = s.next();
+                house[i][1] = s.next().trim();
+                house[i][2] = s.next().trim();
+                house[i][3] = s.next().trim();
+                house[i][4] = s.next().trim();
+              
             }
 
         } catch (Exception e) {
@@ -205,14 +219,14 @@ public class Biopoly extends PApplet {
         File pos = new File("locations.csv");
 
         //testing funcionality of different methods.
-        checkHouse(34);
-        dout();
-        dout();
-        showInstructions();
-        mpQuestion("Alex");
-        mpQuestion("Alex");
-        kQuestion("Alex");
-        kQuestion("Alex");
+        //checkHouse(34);
+//        dout();
+//        dout();
+//        showInstructions();
+//        mpQuestion("Alex");
+//        mpQuestion("Alex");
+//        kQuestion("Alex");
+//        kQuestion("Alex");
 
         /**
          * User inputs the amount of rounds they wish the game will last,
@@ -231,7 +245,10 @@ public class Biopoly extends PApplet {
         while (true) {
             players = Integer.parseInt(JOptionPane.showInputDialog("How many players? (max 5)"));
             if (players >= 1 && players <= 5) {
+                names = new String[players];
+                data = new int[players][4];
                 break;
+                
             }
 
             createGUI();
@@ -249,8 +266,10 @@ public class Biopoly extends PApplet {
             names[i] = JOptionPane.showInputDialog("What is player " + (i + 1) + "'s name?");
         }
 
-        for (int i = 0; i <= players; i++) {
-            data[i][0] = 0; //location
+        for (int i = 0; i <
+                players; i++) {
+            //CHANGE LATER!!! (TO 0)
+            data[i][0] = 1; //location
             data[i][1] = 1; //round
             data[i][2] = 200; //starting money
             data[i][3] = 0; //1 if the player needs to skip turn
@@ -258,59 +277,58 @@ public class Biopoly extends PApplet {
 
         createGUI();
 
-        int currentPlayer = 0;
 
         /**
          * This is the mail loop of the game that is responsible for the
-         * gameplay
+         * gameplay.
          */
-        while (true) {
-
-            if (data[currentPlayer][3] == 1) { //checks if the player is in jail
-                JOptionPane.showMessageDialog(null, names[currentPlayer] + "is skipping this turn", "Jail", PERSPECTIVE);
-                data[currentPlayer][3] = 0; //renoves jail
-                currentPlayer++; //progresses game to next player and loop restarts
-
-            } else {
-                //change player name GLabel to display player name
-                //change money label to display players wealth
-                //chagne round label to display player's current round
-
-                int mk = r.nextInt(2) + 0;
-                if (mk == 0) {
-                    if (kQuestion(names[currentPlayer])) {
-                        int dice = dout(); //rolling the dice if question correct
-                        movePlayerR(currentPlayer, dice);
-                    }
-                } else {
-                    if (mpQuestion(names[currentPlayer])) {
-                        int dice = dout();
-                        movePlayerR(currentPlayer, dice);
-                    }
-                }
-
-                if (checkWin(data[currentPlayer][1], rounds)) {
-                    JOptionPane.showMessageDialog(null, "You have won!!!", "GAME OVER", PERSPECTIVE);
-                    System.exit(0); //game is shutdown when a player wins
-                }
-
-                if (checkHouse(data[currentPlayer][0])) {
-                    data[currentPlayer][2] -= 20;
-                }
-                checkMoney(currentPlayer); //checks if person is bankrupt
-                jail(currentPlayer, data[currentPlayer][0]); //checks if the person landed in jail
-                checkQuestion(currentPlayer, data[currentPlayer][0]); //checks if the person landed on question
-                checkTax(currentPlayer, data[currentPlayer][0]); //checks if the person owes tax or gets free money
-
-                
-                /*
-                Here the program needs to stop and wait for the player to hit next turn for the loop to restart
-                */
-                currentPlayer++; //makes the next player the currentPlayer
-                currentPlayer = currentPlayer>players ? 0 : currentPlayer; //makes sure that current player does not exceed total number of players
-                
-            }
-        }
+//        while (true) {
+//
+//            if (data[currentPlayer][3] == 1) { //checks if the player is in jail
+//                JOptionPane.showMessageDialog(null, names[currentPlayer] + "is skipping this turn", "Jail", PERSPECTIVE);
+//                data[currentPlayer][3] = 0; //renoves jail
+//                currentPlayer++; //progresses game to next player and loop restarts
+//
+//            } else {
+//                //change player name GLabel to display player name
+//                //change money label to display players wealth
+//                //chagne round label to display player's current round
+//
+//                int mk = r.nextInt(2) + 0;
+//                if (mk == 0) {
+//                    if (kQuestion(names[currentPlayer])) {
+//                        int dice = dout(); //rolling the dice if question correct
+//                        movePlayerR(currentPlayer, dice);
+//                    }
+//                } else {
+//                    if (mpQuestion(names[currentPlayer])) {
+//                        int dice = dout();
+//                        movePlayerR(currentPlayer, dice);
+//                    }
+//                }
+//
+//                if (checkWin(data[currentPlayer][1], rounds)) {
+//                    JOptionPane.showMessageDialog(null, "You have won!!!", "GAME OVER", PERSPECTIVE);
+//                    System.exit(0); //game is shutdown when a player wins
+//                }
+//
+//                if (checkHouse(data[currentPlayer][0])) {
+//                    data[currentPlayer][2] -= 20;
+//                }
+//                checkMoney(currentPlayer); //checks if person is bankrupt
+//                jail(currentPlayer, data[currentPlayer][0]); //checks if the person landed in jail
+//                checkQuestion(currentPlayer, data[currentPlayer][0]); //checks if the person landed on question
+//                checkTax(currentPlayer, data[currentPlayer][0]); //checks if the person owes tax or gets free money
+//
+//                
+//                /*
+//                Here the program needs to stop and wait for the player to hit next turn for the loop to restart
+//                */
+//                currentPlayer++; //makes the next player the currentPlayer
+//                currentPlayer = currentPlayer>players ? 0 : currentPlayer; //makes sure that current player does not exceed total number of players
+//                
+//            }
+//        }
     }
 
     public void handleButtonEvents(GButton button, GEvent event) {
@@ -320,6 +338,20 @@ public class Biopoly extends PApplet {
 
     public void draw() {
         background(240, 240, 220);
+        
+        image(boardImage,0,0);
+        for (int i = 0; i < 40; i++)
+        {
+            if(!"none".equals(house[i][4])){
+                image(houseImage, positions[i][0], positions[i][1]);
+            }
+        }
+        
+        
+        
+        
+        
+        
     }
 
     //this is needed to run the program
@@ -573,12 +605,13 @@ public class Biopoly extends PApplet {
      * @param location location of square
      */
     public static void buy(int name, int location) {
-        if (!"none".equals(house[location][4])) { //property already owned
+        if (house[location][4].equals("none")==false) { //property already owned
+            println(house[location][4]);
             JOptionPane.showMessageDialog(null, "This property isn't for sale", "Buy", PERSPECTIVE);
         } else if (data[name][0] != location) { //not on location
             JOptionPane.showMessageDialog(null, "You must be on the square to purchase it!", "Buy", PERSPECTIVE);
         } else {
-            if ((data[name][2] - (data[name][2]) * 2) < Integer.parseInt(house[location][2])) { //data-data*2 because price stored in negatives
+            if ((data[name][2] - (data[name][2]) * 2) > Integer.parseInt(house[location][2])) { //data-data*2 because price stored in negatives
                 JOptionPane.showMessageDialog(null, "You do not have enough money!", "Buy", PERSPECTIVE);
             } else {
                 //transaction happens here
@@ -620,97 +653,114 @@ public class Biopoly extends PApplet {
 
         //move player's icon to positions[data[player][0]], positions[data[player][1]]
     }
-
-    //replace with GImage later
-    public void imgButton1_click1(GImageButton source, GEvent event) { //_CODE_:board:859749:
-        //println("imgButton1 - GImageButton >> GEvent." + event + " @ " + millis());
-    } //_CODE_:board:859749:
-
+    
     public void loc1_click1(GButton source, GEvent event) { //_CODE_:loc1:777178:
         println("loc1 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 1);
     } //_CODE_:loc1:777178:
 
     public void loc3_click1(GButton source, GEvent event) { //_CODE_:loc3:872241:
         println("loc3 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 3);
     } //_CODE_:loc3:872241:
 
     public void loc6_click1(GButton source, GEvent event) { //_CODE_:loc6:487743:
         println("loc6 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 6);
     } //_CODE_:loc6:487743:
 
     public void loc8_click1(GButton source, GEvent event) { //_CODE_:loc8:269587:
         println("loc8 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 8);
     } //_CODE_:loc8:269587:
 
     public void loc9_click1(GButton source, GEvent event) { //_CODE_:loc9:399246:
         println("loc9 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 9);
     } //_CODE_:loc9:399246:
 
     public void loc11_click1(GButton source, GEvent event) { //_CODE_:loc11:993494:
         println("loc11 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 11);
     } //_CODE_:loc11:993494:
 
     public void loc13_click1(GButton source, GEvent event) { //_CODE_:loc13:257534:
         println("loc13 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 13);
     } //_CODE_:loc13:257534:
 
     public void loc14_click1(GButton source, GEvent event) { //_CODE_:loc14:680707:
         println("loc14 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 14);
     } //_CODE_:loc14:680707:
 
     public void loc16_click1(GButton source, GEvent event) { //_CODE_:loc16:718130:
         println("loc16 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 16);
     } //_CODE_:loc16:718130:
 
     public void loc18_click1(GButton source, GEvent event) { //_CODE_:loc18:934508:
         println("loc18 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 18);
     } //_CODE_:loc18:934508:
 
     public void loc19_click1(GButton source, GEvent event) { //_CODE_:loc19:852682:
         println("loc19 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 19);
     } //_CODE_:loc19:852682:
 
     public void loc21_click1(GButton source, GEvent event) { //_CODE_:loc21:830483:
         println("loc21 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 21);
     } //_CODE_:loc21:830483:
 
     public void loc23_click1(GButton source, GEvent event) { //_CODE_:loc23:513948:
         println("loc23 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 23);
     } //_CODE_:loc23:513948:
 
     public void loc24_click1(GButton source, GEvent event) { //_CODE_:loc24:572394:
         println("loc24 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 24);
     } //_CODE_:loc24:572394:
 
     public void loc26_click1(GButton source, GEvent event) { //_CODE_:loc26:497215:
         println("loc26 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 26);
     } //_CODE_:loc26:497215:
 
     public void loc27_click1(GButton source, GEvent event) { //_CODE_:loc27:847439:
         println("loc27 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 27);
     } //_CODE_:loc27:847439:
 
     public void loc29_click1(GButton source, GEvent event) { //_CODE_:loc29:824381:
         println("loc29 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 29);
     } //_CODE_:loc29:824381:
 
     public void loc30_click1(GButton source, GEvent event) { //_CODE_:loc31:550845:
         println("loc31 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 30);
     } //_CODE_:loc31:550845:
 
     public void loc32_click1(GButton source, GEvent event) { //_CODE_:loc32:240339:
         println("loc32 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 32);
     } //_CODE_:loc32:240339:
 
     public void loc34_click1(GButton source, GEvent event) { //_CODE_:loc34:558537:
         println("loc34 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 34);
     } //_CODE_:loc34:558537:
 
     public void loc37_click1(GButton source, GEvent event) { //_CODE_:loc37:483830:
         println("loc37 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 37);
     } //_CODE_:loc37:483830:
 
     public void loc39_click1(GButton source, GEvent event) { //_CODE_:loc39:677374:
         println("loc39 - GButton >> GEvent." + event + " @ " + millis());
+        buy(currentPlayer, 39);
     } //_CODE_:loc39:677374:
 }
