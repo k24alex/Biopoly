@@ -284,12 +284,12 @@ public class Biopoly extends PApplet {
         lblMoney.setLocalColorScheme(1);
         lblMoney.setText(" ");
 
-        lblRound = new GLabel(this, 140, 120, 100, 60);
+        lblRound = new GLabel(this, 140, 120, 120, 60);
         lblRound.setFont(new Font("Calibri", 1, 20));
         lblRound.setLocalColorScheme(1);
         lblRound.setText("Round: " + data[currentPlayer][1]);
 
-        btnNextTurn = new GButton(this, 510, 630, 150, 30);
+        btnNextTurn = new GButton(this, 480, 630, 170, 30);
         btnNextTurn.setFont(new Font("Calibri", 1, 20));
         btnNextTurn.setLocalColorScheme(1);
         btnNextTurn.setOpaque(true);
