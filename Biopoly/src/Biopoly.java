@@ -325,8 +325,7 @@ public class Biopoly extends PApplet {
             lblName.setText(names[currentPlayer] + "'s Turn");
             if (data[currentPlayer][3] == 1) { //checks if the player is in jail
                 JOptionPane.showMessageDialog(null, names[currentPlayer] + " is skipping this turn", "Jail", PERSPECTIVE);
-                data[currentPlayer][3] = 0; //renoves jail
-                currentPlayer++; //progresses game to next player and loop restarts
+                data[currentPlayer][3] = 0; //removes jail
 
             } else {
                 int mk = r.nextInt(5) + 0;
